@@ -75,7 +75,7 @@
     .quadrant {
         height: 100%;
         width: 100%;
-        background-color: aliceblue;
+        background-color: #DCDCDC;
     }
     
     .crest {
@@ -124,7 +124,7 @@
   animation: colorCycle 4s linear infinite;
 }
 
-/* 🎨 Actual color transitions */
+
 @keyframes colorCycle {
   0%   { background-color: red; }
   25%  { background-color: green; }
@@ -133,7 +133,7 @@
   100% { background-color: red; }
 }
 
-    @keyframes rotation {
+@keyframes rotation {
         0% {
             transform: rotate(0deg);filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
         }
