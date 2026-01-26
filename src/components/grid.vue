@@ -51,7 +51,7 @@ function calculateCellPositions(cells) {
 }
 
 // Source image
-const sourceImage = './public/MC.avif';
+const sourceImage = './MC.avif';
 
 const cells = ref(generateLayout());
 const correctPositions = calculateCellPositions(cells.value);
