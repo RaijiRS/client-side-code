@@ -16,7 +16,7 @@ defineProps({
             gridColumn: col,
             backgroundImage: image ? `url(${image})` : 'none',
             backgroundPosition: `${backgroundPositionX} ${backgroundPositionY}`,
-            backgroundSize: '350%'
+            backgroundSize: '750%'
         }"
     >
     </div>
