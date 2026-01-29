@@ -1,32 +1,28 @@
 <script setup>
-defineProps({
-    row: String,
-    col: String,
-    image: String,
-    backgroundPositionX: String,
-    backgroundPositionY: String
+
+const props = defineProps({
+  segment: {
+    type: Object,
+    required: true
+  }
 })
 </script>
 
 <template>
-    <div 
-        class="cell" 
-        :style="{
-            gridRow: row, 
-            gridColumn: col,
-            backgroundImage: image ? `url(${image})` : 'none',
-            backgroundPosition: `${backgroundPositionX} ${backgroundPositionY}`,
-            backgroundSize: '750%'
-        }"
-    >
-    </div>
+  <div
+    class="cell"
+    :style="{
+      backgroundImage: `url(${segment.src})`,
+      ...segment.style
+    }"
+  /> 
 </template>
 
 <style scoped>
 .cell {
-    background-color: rgba(0, 150, 255, 0.3);
-    outline: 1px solid rgba(0, 0, 0, 0.4);
-    overflow: hidden;
-    background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  outline: 1px solid rgba(0,0,0,0.4);
+  background-repeat: no-repeat;
 }
 </style>
