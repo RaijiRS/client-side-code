@@ -2,6 +2,62 @@
 import { ref } from 'vue'
 import Cell from './cell.vue'
 
+// Generate the cell layout (positions stay fixed)
+function generateLayout() {
+    const validLayouts = [
+        // Layout 1:
+        [
+            { row: '1 / 8', col: '1 / 3' },  // 2x7 = 14
+            { row: '1 / 5', col: '3 / 8' },  // 5x4 = 20
+            { row: '5 / 6', col: '3 / 8' },  // 5x1 = 5
+            { row: '6 / 7', col: '3 / 7' },  // 4x1 = 4
+            { row: '7 / 8', col: '3 / 6' },  // 3x1 = 3
+            { row: '7 / 8', col: '6 / 8' },  // 2x1 = 2
+            { row: '6 / 7', col: '7 / 8' }   // 1x1 = 1
+        ],
+        // Layout 2:
+        [
+            { row: '1 / 8', col: '1 / 5' },  // 4x7 = 28
+            { row: '1 / 4', col: '5 / 7' },  // 2x3 = 6
+            { row: '1 / 6', col: '7 / 8' },  // 1x5 = 5
+            { row: '4 / 8', col: '5 / 6' },  // 1x4 = 4
+            { row: '4 / 7', col: '6 / 7' },  // 1x3 = 3
+            { row: '6 / 8', col: '7 / 8' },  // 1x2 = 2
+            { row: '7 / 8', col: '6 / 7' }   // 1x1 = 1
+        ]
+    ];
+    
+    const layout = validLayouts[Math.floor(Math.random() * validLayouts.length)];
+    return layout;
+}
+
+// Calculate the center position of each cell in the 7x7 grid
+function calculateCellPositions(cells) {
+    return cells.map(cell => {
+        const [rowStart, rowEnd] = cell.row.split(' / ').map(Number);
+        const [colStart, colEnd] = cell.col.split(' / ').map(Number);
+        
+        const centerRow = (rowStart + rowEnd - 1) / 2;
+        const centerCol = (colStart + colEnd - 1) / 2;
+        
+        const rowPercent = ((centerRow - 1) / 7) * 100;
+        const colPercent = ((centerCol - 1) / 7) * 100;
+        
+        return {
+            backgroundPositionX: `${colPercent}%`,
+            backgroundPositionY: `${rowPercent}%`
+        };
+    });
+}
+
+// Source image
+const sourceImage = './MC.avif';
+
+const cells = ref(generateLayout());
+const correctPositions = calculateCellPositions(cells.value);
+const correctOrder = [0, 1, 2, 3, 4, 5, 6];
+const positionOrder = ref([...correctOrder]);
+const isIdentified = ref(false);
 
 const BASE_SEGMENTS = Object.freeze([
   {
