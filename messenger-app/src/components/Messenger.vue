@@ -98,7 +98,7 @@ const handleLogout = () => {
   font-family: Arial, Helvetica, sans-serif;
   padding: 10px;
   width: 97%;
-  height: 500px;
+  height: 90vh;
 }
 
 .chat-header {
