@@ -1,0 +1,41 @@
+import Message from '@/models/Message'
+
+const messages = [
+  new Message('Roxy', 'Coco', 'jones', " You're spinnin round, and round, and round in my head"),
+  new Message('Roxy', 'Coco', 'jones', ' Did you really mean the words that you said?'),
+  new Message('Roxy', 'Coco', 'jones', ' is it gonna be me and you??'),
+  new Message(' Truth', 'Tyler', 'James', 'I know you goin be feelings that you thought you had'),
+  new Message(' Truth', 'Tyler', 'James', 'Was for another guy'),
+  new Message(' Truth', 'Tyler', 'James', "Well i'm that other guy"),
+  new Message(' Truth', 'Tyler', 'James', 'just a shy kid camouflaged before your eyes'),
+  new Message(' Truth', 'Tyler', 'James', 'I knew my lyrics were the key to see the other side'),
+  new Message(' Truth', 'Tyler', 'James', "I should've told you"),
+  new Message(' Truth', 'Tyler', 'James', 'but i never had the courage'),
+  new Message(' Truth', 'Tyler', 'James', 'and i thought you really wouldnt understand'),
+  new Message('Roxy', 'Coco', 'jones', 'NOOOO'),
+  new Message(
+    ' Truth',
+    'Tyler',
+    'James',
+    'now im up here just to let my feelings surface apologizin for disgusin who i am',
+  ),
+  new Message('Roxy', 'Coco', 'jones', 'Mmmmm'),
+  new Message('Roxy', 'Coco', 'jones', 'Tell me'),
+  new Message('Roxy', 'Coco', 'jones', 'are you who i thought you were?'),
+  new Message('Roxy', 'Coco', 'jones', 'Or who i wanted you to be?'),
+  new Message('Roxy', 'Coco', 'jones', 'Did you do it all for him?'),
+  new Message('Roxy', 'Coco', 'jones', 'Or were you only playing meee'),
+  new Message(' Truth', 'Tyler', 'James', 'I did it for youu'),
+  new Message(' Truth', 'Tyler', 'James', 'I just couldnt see it through'),
+  new Message(' Truth', 'Tyler', 'James', 'Roxy im sorry '),
+  new Message('Roxy', 'Coco', 'jones', 'did you really mean the words that you said?'),
+  new Message('Roxy', 'Coco', 'jones', 'this is it i gotta know '),
+  new Message('Roxy', 'Coco', 'jones', 'should i stay or should i go'),
+  new Message('Roxy', 'Coco', 'jones', 'SHOW ME THE TRUTH'),
+  new Message('Roxy', 'Coco', 'jones', 'is it gonna be me and you'),
+  new Message('Roxy', 'Coco', 'jones', 'is it gonna be me and you'),
+  new Message(' Truth', 'Tyler', 'James', " You're all i ever wanted"),
+  new Message(' Truth', 'Tyler', 'James', 'Ill take off my mask if you give me a chance '),
+]
+
+export default messages
