@@ -18,7 +18,8 @@ async function handleSignIn() {
   if (!canSubmit.value) return
   error.value = ''
   try {
-    store.login(username.value, password.value)
+    await store.login(username.value, password.value)
+    store.isNewUser = false
     const redirect = route.query.redirect || `/${username.value}/messages`
     router.push(redirect)
   } catch {
@@ -33,7 +34,7 @@ async function handleSignIn() {
       <div class="card-header">
         <span class="eyebrow">MIDNIGHT CLUB</span>
         <h1>Sign In</h1>
-        <p>{{ store.user ? `Back, ${store.user.username}` : 'Welcome back' }}</p>
+        <p>{{ store.isNewUser ? `Account Created Please Sign In` : 'Welcome' }}</p>
       </div>
 
       <div class="fields">

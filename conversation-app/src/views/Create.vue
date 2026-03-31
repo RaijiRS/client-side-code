@@ -6,6 +6,9 @@ import { useUserStore } from '@/stores/user'
 const router = useRouter()
 const store = useUserStore()
 
+const firstName = ref('')
+const lastName = ref('')
+const email = ref('')
 const username = ref('')
 const password = ref('')
 const showPassword = ref(false)
@@ -33,16 +36,27 @@ const passwordState = computed(() => {
   }
 })
 
+const emailError = computed(() => {
+  const val = email.value.trim()
+  if (!val) return 'Email is required'
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return 'Must include @ and a domain'
+  return ''
+})
+
+const isFirstNameValid = computed(() => firstName.value.trim().length > 0)
+const isLastNameValid = computed(() => lastName.value.trim().length > 0)
 const isUsernameValid = computed(() => Object.values(usernameState.value).every(Boolean))
 const isPasswordValid = computed(() => Object.values(passwordState.value).every(Boolean))
-const allValid = computed(() => isUsernameValid.value && isPasswordValid.value)
+const isEmailValid = computed(() => !emailError.value)
+const allValid = computed(() => isUsernameValid.value && isPasswordValid.value && isEmailValid.value &&isFirstNameValid.value &&isLastNameValid.value)
 
-function handleCreate() {
+async function handleCreate() {
   if (!allValid.value) return
   error.value = ''
   try {
-    store.register(username.value, password.value)
-    router.push(`/${username.value}/messages`)
+   await store.register(username.value, password.value, firstName.value, lastName.value, email.value)
+   store.isNewUser = true
+    router.push('/signin')
   } catch (e) {
     error.value = e.message || 'Could not create account.'
   }
@@ -60,17 +74,27 @@ function handleCreate() {
 
       <div class="fields">
         <div class="field">
-          <label for="usernameInput">Username</label>
-          <input
-            id="usernameInput"
-            v-model="username"
-            autocomplete="off"
-            placeholder="your_handle"
-          />
+          <label for="usernameInput">Username*</label>
+          <input id="usernameInput" v-model="username" autocomplete="off" placeholder="your_handle" />
         </div>
-
         <div class="field">
-          <label for="passwordInput">Password</label>
+          <label for="firstNameInput">First Name*</label>
+          <input id="firstNameInput" v-model="firstName" autocomplete="off" placeholder="First Name" />
+        </div>
+        <div class="field">
+          <label for="lastNameInput">Last Name*</label>
+          <input id="lastNameInput" v-model="lastName" autocomplete="off" placeholder="Last Name" />
+        </div>
+        <div class="field">
+          <label for="emailInput">Email*</label>
+          <input id="emailInput" v-model="email" autocomplete="off" placeholder="you@example.com" />
+          <!-- Inline hint shown only when there's a problem -->
+          <span class="field-hint unmet" v-if="email.length > 0 && !isEmailValid">
+            {{ emailError }}
+          </span>
+        </div>
+        <div class="field">
+          <label for="passwordInput">Password*</label>
           <div class="input-row">
             <input
               :type="showPassword ? 'text' : 'password'"
@@ -91,12 +115,8 @@ function handleCreate() {
           <div class="req-label">Username</div>
           <div class="req-list">
             <span :class="['req', usernameState.minLength ? 'met' : 'unmet']">5+ chars</span>
-            <span :class="['req', usernameState.startsWithLetter ? 'met' : 'unmet']"
-              >Starts with letter</span
-            >
-            <span :class="['req', usernameState.lettersAndNumbers ? 'met' : 'unmet']"
-              >Letters & numbers only</span
-            >
+            <span :class="['req', usernameState.startsWithLetter ? 'met' : 'unmet']">Starts with letter</span>
+            <span :class="['req', usernameState.lettersAndNumbers ? 'met' : 'unmet']">Letters & numbers only</span>
             <span :class="['req', usernameState.maxLengthOk ? 'met' : 'unmet']">Max 16</span>
           </div>
         </div>
@@ -188,6 +208,16 @@ function handleCreate() {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.field-hint {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  padding: 3px 0;
+}
+
+.field-hint.unmet {
+  color: #ff3355;
 }
 
 .field label {

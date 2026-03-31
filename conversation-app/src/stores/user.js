@@ -1,29 +1,40 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { findUser, db, createUser } from '@/data/db'
 
 export const useUserStore = defineStore('userStore', () => {
-  const storedUsername = localStorage.getItem('username')
-  const storedUser = storedUsername
-    ? (db.users.find((u) => u.username === storedUsername) ?? null)
-    : null
+  
 
-  const user = ref(storedUser)
+  const isNewUser = ref(false)
+    const user = ref(localStorage.getItem('authToken') ? {
+  username: localStorage.getItem('username'),
+  authToken: localStorage.getItem('authToken'),
+} : null)
+  const host = 'https://stingray-app-u3bsh.ondigitalocean.app'
 
-  function login(username, password) {
-    const found = findUser(username, password)
-    if (!found) throw new Error('Invalid credentials')
-    localStorage.setItem('username', found.username)
-    user.value = found
-    return found
+async function register(username, password, firstName, lastName, email) {
+  const response = await fetch(host + '/user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password, firstName, lastName, email }),
+  })
+  if (!response.ok) {
+    const result = await response.json()
+    throw new Error(result.errors ? Object.values(result.errors)[0].message : 'Could not create account')
   }
+}
 
-  function register(username, password) {
-    const newUser = createUser(username, password)
-    localStorage.setItem('username', newUser.username)
-    user.value = newUser
-    return newUser
-  }
+async function login(username, password) {
+  const response = await fetch(host + '/user/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  })
+  if (!response.ok) throw new Error('Invalid credentials')
+  const result = await response.json()
+  localStorage.setItem('username', result.user.username)
+  localStorage.setItem('authToken', result.authToken)
+  user.value = result.user
+}
 
   function logout() {
     localStorage.removeItem('username')
@@ -38,7 +49,7 @@ export const useUserStore = defineStore('userStore', () => {
     if (fresh) user.value = { ...fresh }
   }
 
-  return { user, login, register, logout, refresh, isLoggedIn }
+  return { user, login, register, logout, refresh, isLoggedIn,isNewUser }
 })
 
 const usernameRules = [
@@ -71,5 +82,27 @@ export function validatePassword(pass) {
   for (const rule of passwordRules) {
     if (!rule.test(trimmed)) errors.push(rule.message)
   }
+  return errors
+}
+
+const emailRules = [
+  {
+    test: (val) => !!val,
+    message: 'Email is required',
+  },
+  {
+    test: (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+    message: 'Invalid email format',
+  },
+]
+
+export function validateEmail(email) {
+  const errors = []
+  const trimmed = email?.trim() || ''
+
+  for (const rule of emailRules) {
+    if (!rule.test(trimmed)) errors.push(rule.message)
+  }
+
   return errors
 }
