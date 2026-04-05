@@ -40,10 +40,10 @@ router.beforeEach((to) => {
   }
 
   if (to.params.username && loggedIn && store.user?.username) {
-  if (to.params.username.toLowerCase() !== store.user.username.toLowerCase()) {
-    return { path: `/${store.user.username}/messages` }
+    if (to.params.username.toLowerCase() !== store.user.username.toLowerCase()) {
+      return { path: `/${store.user.username}/messages` }
+    }
   }
-}
 })
 
 export default router

@@ -4,4 +4,8 @@
   <router-view></router-view>
 </template>
 
-<style scoped></style>
+<style scoped>
+template {
+  background-color: #090c10;
+}
+</style>

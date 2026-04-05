@@ -10,27 +10,26 @@ import NavBar from '@/components/NavBar.vue'
 
 <style scoped>
 .app-view {
-  min-height: 100%;
-  width: 100%;
+  min-height: 97vh;
+  width: 99vw;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  background-color: #efeded;
-  position: relative;
+  background-color: #090c10;
+  position: fixed;
   overflow: hidden;
   color: #000;
+  display: flex;
 }
 
 .app-view::before {
   content: '';
   position: fixed;
   inset: 70px 0 70px;
-  background-image: url(/midnightClub.jpg);
+  background-image: url(/midnightClub.png);
   background-repeat: no-repeat;
   background-position: center;
   background-size: 35.6%;
-  opacity: 0.5;
-  filter: grayscale(100%);
   pointer-events: none;
   z-index: 0;
 }

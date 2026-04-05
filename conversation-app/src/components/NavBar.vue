@@ -24,7 +24,7 @@
   content: '';
   position: fixed;
   inset: 70px 0 70px;
-  background-image: url(/midnightClub.jpg);
+  background-image: url(/midnightClub.png);
   background-repeat: no-repeat;
   background-position: center;
   background-size: 35.6%;
@@ -40,7 +40,7 @@
 }
 
 nav {
-  background-color: #7a0101bd;
+  background-color: #00d4ff;
   padding: 7px;
   display: flex;
   gap: 20px;

@@ -20,8 +20,7 @@ async function handleSignIn() {
   try {
     await store.login(username.value, password.value)
     store.isNewUser = false
-    const redirect = route.query.redirect || `/${username.value}/messages`
-    router.push(redirect)
+    router.push(`/${username.value}/messages`)
   } catch {
     error.value = 'Invalid username or password.'
   }
@@ -83,12 +82,15 @@ async function handleSignIn() {
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Share+Tech+Mono&display=swap');
 
 .page {
-  min-height: 100vh;
+  height: 97vh;
+  width: 99vw;
+  overflow: hidden;
+  position: fixed;
   background: #090c10;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+
   font-family: 'Barlow Condensed', sans-serif;
 }
 

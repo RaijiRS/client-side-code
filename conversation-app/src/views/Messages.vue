@@ -2,6 +2,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
 import {
   db,
   findUserById,
@@ -9,7 +10,6 @@ import {
   sendMessage,
   acceptRequest,
   declineRequest,
-  sendFriendRequest,
 } from '@/data/db'
 
 const router = useRouter()
@@ -19,18 +19,26 @@ const { refresh } = store
 
 if (!store.user) router.push('/signin')
 
+const { friends, incoming, outgoing } = storeToRefs(store)
 const me = computed(() => store.user)
 
 const activeFriend = ref(null)
 
-function resolveFromRoute() {
+async function resolveFromRoute() {
   const param = route.params.friendUsername
+
   if (!param) {
     activeFriend.value = null
     return
   }
-  const match = db.users.find((u) => u.username.toLowerCase() === param.toLowerCase())
-  activeFriend.value = match ?? null
+
+  const result = await store.getUsers(1, 0, param)
+  if (result && Array.isArray(result) && result.length > 0) {
+    const match = result.find((u) => u.username.toLowerCase() === param.toLowerCase())
+    activeFriend.value = match || null
+  } else {
+    activeFriend.value = null
+  }
 }
 
 resolveFromRoute()
@@ -38,17 +46,59 @@ watch(() => route.params.friendUsername, resolveFromRoute)
 
 const activeTab = ref('friends')
 
-const friends = computed(
-  () => me.value?.friends?.map((id) => findUserById(id)).filter(Boolean) ?? [],
-)
+async function loadData() {
+  try {
+    await store.fetchRelationships()
+    const profile = await store.getProfile()
+    console.log(profile)
+  } catch (err) {
+    console.log(err)
+  }
+}
+loadData()
 
-const incoming = computed(
-  () => me.value?.incomingRequests?.map((id) => findUserById(id)).filter(Boolean) ?? [],
-)
 
-const outgoing = computed(
-  () => me.value?.outgoingRequests?.map((id) => findUserById(id)).filter(Boolean) ?? [],
-)
+async function accept(fromId) {
+  try {
+    await store.acceptRequest(fromId)
+    await loadData()
+  } catch (err) {
+    console.error('Accept failed:', err)
+  }
+}
+
+async function decline(fromId) {
+  try {
+    await store.declineRequest(fromId)
+    await loadData()
+  } catch (err) {
+    console.error('Decline failed:', err)
+  }
+}
+
+
+
+
+async function sendFriendRequest(targetUser) {
+  if (!me.value) return
+
+  
+   const alreadySent = outgoing.value.some((req) => String(req.userId) === targetUser._id)
+   
+   console.log(targetUser._id)
+  if (alreadySent) return
+  try {
+    const targetId = targetUser._id || targetUser.id
+    console.log(targetId)
+    await store.sendRequest(targetId,targetUser.username)
+
+    searchQuery.value = ''
+    searchResults.value = []
+    await loadData()
+  } catch (err) {
+    console.error('Send request failed:', err)
+  }
+}
 
 function openChat(friend) {
   activeFriend.value = friend
@@ -85,37 +135,10 @@ function scrollToBottom() {
 
 watch(messageList, () => nextTick(scrollToBottom), { flush: 'post' })
 
-function accept(fromId) {
-  acceptRequest(me.value.id, fromId)
-  refresh()
-}
-
-function decline(fromId) {
-  declineRequest(me.value.id, fromId)
-  refresh()
-}
-
 const searchQuery = ref('')
 const searchError = ref('')
-
-const searchResults = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase()
-  if (!q) return []
-  return db.users.filter((u) => {
-    if (u.id === me.value?.id) return false // not yourself
-    if (me.value?.friends?.includes(u.id)) return false // already friends
-    if (me.value?.outgoingRequests?.includes(u.id)) return false // already sent
-    if (me.value?.incomingRequests?.includes(u.id)) return false // they already sent you one
-    return u.username.toLowerCase().includes(q)
-  })
-})
-
-function sendRequest(targetUser) {
-  if (!me.value) return
-  sendFriendRequest(me.value.id, targetUser.id)
-  searchQuery.value = ''
-  refresh()
-}
+const searchResults = ref([])
+const isSearching = ref(false)
 
 function formatTime(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -127,6 +150,63 @@ function logout() {
   store.logout()
   router.push('/signin')
 }
+
+async function runSearch(query) {
+  const q = query.trim()
+  if (!q) {
+    searchResults.value = []
+    return
+  }
+
+  isSearching.value = true
+  try {
+    const data = await store.getUsers(10, 0, q)
+
+    if (data && Array.isArray(data.users)) {
+      searchResults.value = data.users.filter((u) => {
+        const isMe = u.username.toLowerCase() === me.value?.username?.toLowerCase()
+
+        const targetId = String(u._id || u.id)
+        const isFriend = me.value?.friends?.some((fId) => String(fId) === targetId)
+
+        return !isMe && !isFriend
+      }).map((u) => ({
+  ...u,
+  requestSent: outgoing.value.some((req) => String(req.userId) === String(u._id || u.id))
+}))
+    } else {
+      searchResults.value = []
+    }
+  } catch (err) {
+    console.error('Search error:', err)
+    searchResults.value = []
+  } finally {
+    isSearching.value = false
+  }
+}
+
+let searchTimeout = null
+watch(searchQuery, (newVal) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    runSearch(newVal)
+  }, 300)
+})
+
+
+const confirmingRemove = ref(false)
+
+async function removeFriend() {
+  try {
+    await store.removeFriend(activeFriend.value.id)
+    activeFriend.value = null
+    router.push(`/${me.value.username}/messages`)
+    await loadData()
+  } catch (err) {
+    console.error('Remove failed:', err)
+  }
+}
+
 </script>
 
 <template>
@@ -153,14 +233,14 @@ function logout() {
           @click="activeTab = 'friends'"
         >
           Friends
-          <span class="badge" v-if="friends.length">{{ friends.length }}</span>
+          <span class="badge" v-if="friends?.length">{{ friends.length }}</span>
         </button>
         <button
           :class="['tab', activeTab === 'requests' ? 'active' : '']"
           @click="activeTab = 'requests'"
         >
           Requests
-          <span class="badge alert" v-if="incoming.length">{{ incoming.length }}</span>
+          <span class="badge alert" v-if="incoming?.length">{{ incoming.length }}</span>
         </button>
         <button :class="['tab', activeTab === 'add' ? 'active' : '']" @click="activeTab = 'add'">
           + Add
@@ -178,11 +258,11 @@ function logout() {
           <span class="friend-name">{{ friend.username }}</span>
           <span class="online-dot"></span>
         </div>
-        <div class="empty" v-if="friends.length === 0">No friends yet.</div>
+        <div class="empty" v-if="friends?.length === 0">No friends yet.</div>
       </div>
 
       <div class="list" v-if="activeTab === 'requests'">
-        <div class="req-section-label" v-if="incoming.length">Incoming</div>
+        <div class="req-section-label" v-if="incoming?.length">Incoming</div>
         <div class="request-row" v-for="user in incoming" :key="user.id">
           <span class="avatar sm">{{ user.avatar }}</span>
           <span class="friend-name">{{ user.username }}</span>
@@ -192,14 +272,14 @@ function logout() {
           </div>
         </div>
 
-        <div class="req-section-label" v-if="outgoing.length">Outgoing</div>
+        <div class="req-section-label" v-if="outgoing?.length">Outgoing</div>
         <div class="request-row" v-for="user in outgoing" :key="user.id">
           <span class="avatar sm">{{ user.avatar }}</span>
           <span class="friend-name">{{ user.username }}</span>
           <span class="pending-tag">Pending</span>
         </div>
 
-        <div class="empty" v-if="!incoming.length && !outgoing.length">No requests.</div>
+        <div class="empty" v-if="!incoming?.length && !outgoing?.length">No requests.</div>
       </div>
 
       <div class="list add-panel" v-if="activeTab === 'add'">
@@ -211,7 +291,7 @@ function logout() {
           <div class="request-row" v-for="user in searchResults" :key="user.id">
             <span class="avatar sm">{{ user.avatar }}</span>
             <span class="friend-name">{{ user.username }}</span>
-            <button class="req-btn add" @click="sendRequest(user)">+</button>
+            <button v-if= "!user.requestSent" class="req-btn add" @click="sendFriendRequest(user)">+</button>
           </div>
           <div class="empty" v-if="searchResults.length === 0">No users found.</div>
         </div>
@@ -234,6 +314,14 @@ function logout() {
             <div class="chat-url">/{{ me?.username }}/messages/{{ activeFriend.username }}</div>
           </div>
           <div class="chat-status-dot"></div>
+          <button class="logout-btn" v-if="!confirmingRemove" @click="confirmingRemove = true">
+    Remove
+  </button>
+  <div class="logout-confirm" v-else>
+    <span>Sure?</span>
+    <button class="req-btn accept" @click="removeFriend(); confirmingRemove = false">✓</button>
+    <button class="req-btn decline" @click="confirmingRemove = false">✕</button>
+  </div>
         </div>
 
         <div class="messages" ref="messagesEl">
@@ -263,7 +351,10 @@ function logout() {
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Share+Tech+Mono&display=swap');
 
 .page {
-  min-height: 100vh;
+  height: 97vh;
+  width: 99vw;
+  overflow: hidden;
+  position: fixed;
   background: #090c10;
   display: flex;
   font-family: 'Barlow Condensed', sans-serif;

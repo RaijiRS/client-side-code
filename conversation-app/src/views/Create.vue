@@ -48,14 +48,27 @@ const isLastNameValid = computed(() => lastName.value.trim().length > 0)
 const isUsernameValid = computed(() => Object.values(usernameState.value).every(Boolean))
 const isPasswordValid = computed(() => Object.values(passwordState.value).every(Boolean))
 const isEmailValid = computed(() => !emailError.value)
-const allValid = computed(() => isUsernameValid.value && isPasswordValid.value && isEmailValid.value &&isFirstNameValid.value &&isLastNameValid.value)
+const allValid = computed(
+  () =>
+    isUsernameValid.value &&
+    isPasswordValid.value &&
+    isEmailValid.value &&
+    isFirstNameValid.value &&
+    isLastNameValid.value,
+)
 
 async function handleCreate() {
   if (!allValid.value) return
   error.value = ''
   try {
-   await store.register(username.value, password.value, firstName.value, lastName.value, email.value)
-   store.isNewUser = true
+    await store.register(
+      username.value,
+      password.value,
+      firstName.value,
+      lastName.value,
+      email.value,
+    )
+    store.isNewUser = true
     router.push('/signin')
   } catch (e) {
     error.value = e.message || 'Could not create account.'
@@ -75,11 +88,21 @@ async function handleCreate() {
       <div class="fields">
         <div class="field">
           <label for="usernameInput">Username*</label>
-          <input id="usernameInput" v-model="username" autocomplete="off" placeholder="your_handle" />
+          <input
+            id="usernameInput"
+            v-model="username"
+            autocomplete="off"
+            placeholder="your_handle"
+          />
         </div>
         <div class="field">
           <label for="firstNameInput">First Name*</label>
-          <input id="firstNameInput" v-model="firstName" autocomplete="off" placeholder="First Name" />
+          <input
+            id="firstNameInput"
+            v-model="firstName"
+            autocomplete="off"
+            placeholder="First Name"
+          />
         </div>
         <div class="field">
           <label for="lastNameInput">Last Name*</label>
@@ -115,8 +138,12 @@ async function handleCreate() {
           <div class="req-label">Username</div>
           <div class="req-list">
             <span :class="['req', usernameState.minLength ? 'met' : 'unmet']">5+ chars</span>
-            <span :class="['req', usernameState.startsWithLetter ? 'met' : 'unmet']">Starts with letter</span>
-            <span :class="['req', usernameState.lettersAndNumbers ? 'met' : 'unmet']">Letters & numbers only</span>
+            <span :class="['req', usernameState.startsWithLetter ? 'met' : 'unmet']"
+              >Starts with letter</span
+            >
+            <span :class="['req', usernameState.lettersAndNumbers ? 'met' : 'unmet']"
+              >Letters & numbers only</span
+            >
             <span :class="['req', usernameState.maxLengthOk ? 'met' : 'unmet']">Max 16</span>
           </div>
         </div>
@@ -148,12 +175,15 @@ async function handleCreate() {
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Share+Tech+Mono&display=swap');
 
 .page {
-  min-height: 100vh;
+  min-height: 97vh;
+  width: 99vw;
+  overflow: hidden;
+  position: fixed;
   background: #090c10;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+
   font-family: 'Barlow Condensed', sans-serif;
 }
 
