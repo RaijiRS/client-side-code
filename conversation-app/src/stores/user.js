@@ -2,13 +2,16 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useUserStore = defineStore('userStore', () => {
-
   const isNewUser = ref(false)
-  const user = ref(localStorage.getItem('authToken') ? {
-    username: localStorage.getItem('username'),
-    authToken: localStorage.getItem('authToken'),
-    _id: localStorage.getItem('_id')
-  } : null)
+  const user = ref(
+    localStorage.getItem('authToken')
+      ? {
+          username: localStorage.getItem('username'),
+          authToken: localStorage.getItem('authToken'),
+          _id: localStorage.getItem('_id'),
+        }
+      : null,
+  )
 
   const friends = ref([])
   const incoming = ref([])
@@ -25,7 +28,9 @@ export const useUserStore = defineStore('userStore', () => {
     })
     if (!response.ok) {
       const result = await response.json()
-      throw new Error(result.errors ? Object.values(result.errors)[0].message : 'Could not create account')
+      throw new Error(
+        result.errors ? Object.values(result.errors)[0].message : 'Could not create account',
+      )
     }
   }
 
@@ -59,22 +64,20 @@ export const useUserStore = defineStore('userStore', () => {
     const options = {
       method: 'GET',
       headers: {
-        "Authorization": `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     }
     const response = await fetch(url, options)
     if (response.ok) {
       const data = await response.json()
 
-
       if (data && Array.isArray(data.friends)) {
-    friends.value = data.friends.map(f => ({
-      id: f.userId,
-      username: f.username,
-      avatar: f.username.substring(0, 2).toUpperCase()
-    }))
-  }
-      console.log(data)
+        friends.value = data.friends.map((f) => ({
+          id: f.userId,
+          username: f.username,
+          avatar: f.username.substring(0, 2).toUpperCase(),
+        }))
+      }
       return data
     }
   }
@@ -83,7 +86,7 @@ export const useUserStore = defineStore('userStore', () => {
     const params = new URLSearchParams({
       limit: limit.toString(),
       skip: skip.toString(),
-      search: search
+      search: search,
     })
 
     const url = `${host}/users?${params.toString()}`
@@ -92,9 +95,9 @@ export const useUserStore = defineStore('userStore', () => {
     const options = {
       method: 'GET',
       headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
     }
 
     try {
@@ -105,8 +108,8 @@ export const useUserStore = defineStore('userStore', () => {
       }
       return data
     } catch (err) {
-      console.error("Fetch error:", err)
-      return { error: "Connection refused or network issue" }
+      console.error('Fetch error:', err)
+      return { error: 'Connection refused or network issue' }
     }
   }
 
@@ -119,30 +122,29 @@ export const useUserStore = defineStore('userStore', () => {
       const response = await fetch(`${host}/friend-requests`, {
         method: 'GET',
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       })
 
       const data = await response.json()
 
       if (Array.isArray(data)) {
         incoming.value = data
-          .filter(req => req.receiver.userId === myId)
-          .map(req => ({
+          .filter((req) => req.receiver.userId === myId)
+          .map((req) => ({
             id: req._id,
             username: req.sender.username,
             userId: req.sender.userId,
-            avatar: req.sender.username.substring(0, 2).toUpperCase()
+            avatar: req.sender.username.substring(0, 2).toUpperCase(),
           }))
 
-        const incomingIds = incoming.value.map(r => String(r.userId))
-        outgoing.value = outgoing.value.filter(r => !incomingIds.includes(String(r.userId)))
+        const incomingIds = incoming.value.map((r) => String(r.userId))
+        outgoing.value = outgoing.value.filter((r) => !incomingIds.includes(String(r.userId)))
         localStorage.setItem('outgoingRequests', JSON.stringify(outgoing.value))
       }
-
     } catch (error) {
-      console.error("Store: Sync Failed", error)
+      console.error('Store: Sync Failed', error)
     } finally {
       loading.value = false
     }
@@ -154,9 +156,9 @@ export const useUserStore = defineStore('userStore', () => {
       const response = await fetch(`${host}/friend-request/${userId}`, {
         method: 'POST',
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       })
 
       if (response.ok) {
@@ -175,10 +177,10 @@ export const useUserStore = defineStore('userStore', () => {
     const response = await fetch(`${host}/friend-request/${requestId}?accept=true`, {
       method: 'PATCH',
       headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ id: requestId })
+      body: JSON.stringify({ id: requestId }),
     })
     if (response.ok) {
       await fetchRelationships()
@@ -190,33 +192,49 @@ export const useUserStore = defineStore('userStore', () => {
     const response = await fetch(`${host}/friend-request/${requestId}?accept=false`, {
       method: 'PATCH',
       headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ id: requestId })
+      body: JSON.stringify({ id: requestId }),
     })
     if (response.ok) {
       await fetchRelationships()
     }
   }
 
-     async function removeFriend(userId) {
-  const token = localStorage.getItem('authToken')
-  const response = await fetch(`${host}/friend/${userId}`, {
-    method: 'DELETE',
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ id: userId })
-  })
-  if (response.ok) {
-    await getProfile()
+  async function removeFriend(userId) {
+    const token = localStorage.getItem('authToken')
+    const response = await fetch(`${host}/friend/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: userId }),
+    })
+    if (response.ok) {
+      await getProfile()
+    }
   }
-}
-  
 
-  return { removeFriend,user, login, register, logout, isLoggedIn, isNewUser, getUsers, getProfile, acceptRequest, fetchRelationships, declineRequest, sendRequest, friends, incoming, outgoing }
+  return {
+    removeFriend,
+    user,
+    login,
+    register,
+    logout,
+    isLoggedIn,
+    isNewUser,
+    getUsers,
+    getProfile,
+    acceptRequest,
+    fetchRelationships,
+    declineRequest,
+    sendRequest,
+    friends,
+    incoming,
+    outgoing,
+  }
 })
 
 const usernameRules = [

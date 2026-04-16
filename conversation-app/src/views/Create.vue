@@ -193,7 +193,7 @@ async function handleCreate() {
   border-top: 3px solid #00d4ff;
   width: 100%;
   max-width: 360px;
-  padding: 32px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 24px;
