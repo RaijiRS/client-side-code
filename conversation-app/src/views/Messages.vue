@@ -310,6 +310,7 @@ const totalRequestCount = computed(
 const confirmingLogout = ref(false)
 
 function logout() {
+  activeChat.value = null
   userStore.logout()
   router.push('/signin')
 }
