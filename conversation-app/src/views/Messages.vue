@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
@@ -17,17 +17,84 @@ const me = computed(() => userStore.user)
 
 const activeTab = ref('chats')
 
+const pollInterval = ref(null)
+const chatListInterval = ref(null)
+const requestsInterval = ref(null)
+
+function startMessagePolling(chatId) {
+  pollInterval.value = setInterval(async () => {
+    if (document.hidden) return
+    try {
+      await chatStore.fetchMessages(chatId)
+    } catch (err) {
+      console.error('Polling Error:', err)
+    }
+  }, 3000)
+}
+
+function stopMessagePolling() {
+  if (pollInterval.value) {
+    clearInterval(pollInterval.value)
+    pollInterval.value = null
+  }
+}
+
+function startChatListPolling() {
+  chatListInterval.value = setInterval(async () => {
+    if (document.hidden) return
+    try {
+      await chatStore.fetchChats()
+      await chatStore.fetchPendingInvites()
+    } catch (err) {
+      console.error('Chat List polling error:', err)
+    }
+  }, 8000)
+}
+
+function stopChatListPolling() {
+  if (chatListInterval.value) {
+    clearInterval(chatListInterval.value)
+    chatListInterval.value = null
+  }
+}
+
+function startRequestsPolling() {
+  requestsInterval.value = setInterval(async () => {
+    if (document.hidden) return
+    try {
+      await userStore.fetchRelationships()
+    } catch (err) {
+      console.error(err)
+    }
+  }, 8000)
+}
+
+function stopRequestsPolling() {
+  if (requestsInterval.value) {
+    clearInterval(requestsInterval.value)
+    requestsInterval.value = null
+  }
+}
+
 async function loadData() {
   try {
     await userStore.fetchRelationships()
     await userStore.getProfile()
     await chatStore.fetchChats()
     await chatStore.fetchPendingInvites()
+    startChatListPolling()
+    startRequestsPolling()
   } catch (err) {
     console.error(err)
   }
 }
 loadData()
+
+onUnmounted(() => {
+  stopMessagePolling()
+  stopChatListPolling()
+  stopRequestsPolling()
+})
 
 async function accept(fromId) {
   try {
@@ -232,6 +299,8 @@ async function selectChat(chat) {
   await chatStore.fetchChat(chatId)
   await chatStore.fetchMessages(chatId)
   nextTick(scrollToBottom)
+  stopMessagePolling()
+  startMessagePolling(chatId)
 }
 
 async function acceptInvite(invite) {
@@ -1106,13 +1175,13 @@ async function startInvite(chat) {
   border-color: #00d4ff55;
 }
 .search-input::placeholder {
-  color: #1e2e3e;
+  color: #3f668d;
 }
 
 .empty {
   font-family: 'Share Tech Mono', monospace;
   font-size: 11px;
-  color: #1e2e3e;
+  color: #3d78b2;
   padding: 16px;
   text-align: center;
 }
@@ -1143,7 +1212,7 @@ async function startInvite(chat) {
 .no-chat p {
   font-family: 'Share Tech Mono', monospace;
   font-size: 12px;
-  color: #1e2e3e;
+  color: #345f89;
   margin: 0;
 }
 
@@ -1167,7 +1236,7 @@ async function startInvite(chat) {
 .chat-url {
   font-family: 'Share Tech Mono', monospace;
   font-size: 10px;
-  color: #2a3f52;
+  color: #447cb0;
   letter-spacing: 0.05em;
   margin-top: 1px;
 }
